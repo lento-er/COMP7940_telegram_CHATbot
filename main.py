@@ -1,6 +1,6 @@
 import logging
 import redis
-import os
+import configparser
 import json
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler,MessageHandler,filters
@@ -12,11 +12,14 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+
 class TelegramBot:
-    def __init__(self):
-        self.redis1 = redis.Redis(host=os.environ['REDISHOST'], port=os.environ['REDISPORT'], db=0, password=os.environ['REDISPASSWORD'])
-        self.chatgpt = HKBU_ChatGPT()
-        self.application = ApplicationBuilder().token(os.environ["TELEGRAMTOKEN"]).build()
+    def __init__(self,config_file = "config.ini"):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        self.redis1 = redis.Redis(host=config['REDIS']['HOST'], port=config['REDIS']['PORT'], db=0, password=config['REDIS']['PASSWORD'])
+        self.chatgpt = HKBU_ChatGPT(config)
+        self.application = ApplicationBuilder().token(config["TELEGRAM"]["ACCESS_TOKEN"]).build()
 
     # 下方的async开头的函数是Telegram Bot API规定的函数格式，用于处理用户发送的消息，可以根据实际需求进行新增、改写
     # update: 用户发送的消息 context: 上下文
@@ -72,7 +75,7 @@ class TelegramBot:
             return
         msg = [
             # {"role":"system","content":"你是一个书评及影视作者，当我给你一本书名或者一部电影时，请给出打分及评论，满分是10分"},
-            {"role":"user","content":f"我给你一本书或者一部电影的标题，你需要先给出评分，然后介绍并评论，标题是：{context.args[0]}"}
+            {"role":"user","content":f"我给你一本书或者一部电影的标题，你需要先给出评分，然后介绍并评论，用英文回答，标题是：{context.args[0]}"}
         ]
         reply_message = self.parse_msg(update,msg)
         await context.bot.send_message(chat_id=update.effective_chat.id, text=reply_message)
@@ -113,3 +116,5 @@ class TelegramBot:
 if __name__ == '__main__':
     tel_chatgpt_bot = TelegramBot()
     tel_chatgpt_bot.main()
+
+
