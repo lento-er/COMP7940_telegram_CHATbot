@@ -1,0 +1,33 @@
+name: Deploy Python Project to Aliyun
+ 
+on:
+  push:
+    branches:
+      - main
+ 
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+ 
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11.1
+ 
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Deploy to Aliyun
+        env:
+          ALIYUN_ECS_HOST: ${{ secrets.ALIYUN_ECS_HOST }}
+          ALIYUN_ECS_USERNAME: ${{ secrets.ALIYUN_ECS_USERNAME }}
+          ALIYUN_ECS_PASSWORD: ${{ secrets.ALIYUN_ECS_PASSWORD }}
+        run: |
+          scp -o StrictHostKeyChecking=no -r * $ALIYUN_ECS_USERNAME@$ALIYUN_ECS_HOST:/path/to/deploy
+          python main.py
+          # 其他部署命令，例如：ssh 执行安装、启动服务等
