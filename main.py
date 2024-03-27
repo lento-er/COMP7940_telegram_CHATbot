@@ -100,7 +100,7 @@ class TelegramBot:
     async def reset(self,update,context):
         user_id = update.get_bot().id
         # self.redis1.delete(user_id)
-        self.db.delete_many({"user_id":user_id})
+        self.db.delete_many({"user_id":str(user_id)})
         await self.start(update,context)
 
 
