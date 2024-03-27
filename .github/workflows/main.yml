@@ -27,7 +27,7 @@ jobs:
           ALIYUN_ECS_HOST: ${{ secrets.ALIYUN_ECS_HOST }}
           ALIYUN_ECS_USERNAME: ${{ secrets.ALIYUN_ECS_USERNAME }}
           # 指定SSH私钥的位置
-          SSH_PRIVATE_KEY: ${{ secrets.ALIYUN_TOKEN }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           # 启动ssh-agent并添加私钥
           eval "$(ssh-agent -s)"
