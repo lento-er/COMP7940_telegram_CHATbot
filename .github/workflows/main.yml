@@ -29,11 +29,19 @@ jobs:
           # 指定SSH私钥的位置
           SSH_PRIVATE_KEY: ${{ secrets.ALIYUN_TOKEN }}
         run: |
-          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -i -
+          # 启动ssh-agent并添加私钥
+          eval "$(ssh-agent -s)"
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+
+          # 创建.ssh目录并扫描服务器的SSH密钥
           mkdir -p ~/.ssh
           ssh-keyscan -t rsa $ALIYUN_ECS_HOST >> ~/.ssh/known_hosts
+
+          # 设置适当的权限
           chmod 700 ~/.ssh
           chmod 600 ~/.ssh/known_hosts
+
+          # 通过SSH连接到服务器并执行部署命令
           ssh -o StrictHostKeyChecking=no $ALIYUN_ECS_USERNAME@$ALIYUN_ECS_HOST "
             cd /root/telegram_bot_docker &&
             git pull origin main &&
