@@ -1,5 +1,6 @@
 import logging
-import redis
+# import redis
+from pymongo import MongoClient
 import configparser
 import json
 from telegram import Update
@@ -17,7 +18,12 @@ class TelegramBot:
     def __init__(self,config_file = "config.ini"):
         config = configparser.ConfigParser()
         config.read(config_file)
-        self.redis1 = redis.Redis(host=config['REDIS']['HOST'], port=config['REDIS']['PORT'], db=0, password=config['REDIS']['PASSWORD'])
+        host = config['MONGODB']['HOST']
+        uri = "mongodb://%s:%s@%s" % (config['MONGODB']['USERNAME'], config['MONGODB']['PASSWORD'], host)
+        print(uri)
+        self.client = MongoClient(uri)
+        self.db = self.client["telegram"]["chatmsg"]
+        # self.redis1 = redis.Redis(host=config['REDIS']['HOST'], port=config['REDIS']['PORT'], db=0, password=config['REDIS']['PASSWORD'])
         self.chatgpt = HKBU_ChatGPT(config)
         self.application = ApplicationBuilder().token(config["TELEGRAM"]["ACCESS_TOKEN"]).build()
 
@@ -48,9 +54,10 @@ class TelegramBot:
     def parse_msg(self,update,msg):
         # 这个函数从redis中读取对应用户之前的对话记录，以保持上下文
         user_id = update.get_bot().id
-        content = self.redis1.get(str(user_id))
+        # content = self.redis1.get(str(user_id))
+        content = self.db.find_one({"user_id":str(user_id)})
         if content:
-            content = json.loads(content)
+            content = content['content']
             content.extend(msg)
         else:
             content = msg
@@ -58,7 +65,8 @@ class TelegramBot:
         if reply_message:
             content.append(reply_message)
             logging.info(content)
-            self.redis1.set(user_id, json.dumps(content))
+            self.db.update_one({'user_id':str(user_id)},{"$set":{'content':content}},upsert=True)
+            # self.redis1.set(user_id, json.dumps(content))
             return reply_message['content']
         else:
             return "ERROR, I'm sorry, I can't get answer from chatgpt. please check log and try again."
@@ -91,7 +99,8 @@ class TelegramBot:
 
     async def reset(self,update,context):
         user_id = update.get_bot().id
-        self.redis1.delete(user_id)
+        # self.redis1.delete(user_id)
+        self.db.delete_many({"user_id":user_id})
         await self.start(update,context)
 
 
@@ -101,7 +110,7 @@ class TelegramBot:
         # 创建一个CommandHandler，处理用户发送的命令，当用户发送/start命令时，调用start函数
         self.application.add_handler(CommandHandler('start', self.start))
         # 创建一个CommandHandler，处理用户发送的命令，当用户发送/add命令时，调用add函数
-        self.application.add_handler(CommandHandler('add', self.add))
+        # self.application.add_handler(CommandHandler('add', self.add))
         # 创建一个CommandHandler，处理用户发送的命令，当用户发送/caps命令时，调用caps函数
         self.application.add_handler(CommandHandler('caps', self.caps))
         self.application.add_handler(CommandHandler('mark', self.mark))
