@@ -26,11 +26,16 @@ jobs:
         env:
           ALIYUN_ECS_HOST: ${{ secrets.ALIYUN_ECS_HOST }}
           ALIYUN_ECS_USERNAME: ${{ secrets.ALIYUN_ECS_USERNAME }}
-          ALIYUN_ECS_PASSWORD: ${{ secrets.ALIYUN_ECS_PASSWORD }}
-          ALIYUN_KEY: ${{ secrets.ALIYUN_TOKEN }}
+          # 指定SSH私钥的位置
+          SSH_PRIVATE_KEY: ${{ secrets.ALIYUN_TOKEN }}
         run: |
-          sshpass -e ssh -o StrictHostKeyChecking=no $ALIYUN_ECS_USERNAME@$ALIYUN_ECS_HOST "
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -i -
+          mkdir -p ~/.ssh
+          ssh-keyscan -t rsa $ALIYUN_ECS_HOST >> ~/.ssh/known_hosts
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/known_hosts
+          ssh -o StrictHostKeyChecking=no $ALIYUN_ECS_USERNAME@$ALIYUN_ECS_HOST "
             cd /root/telegram_bot_docker &&
             git pull origin main &&
-            nohup python main.py
+            nohup python main.py &
           "
