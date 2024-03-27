@@ -27,7 +27,9 @@ jobs:
           ALIYUN_ECS_HOST: ${{ secrets.ALIYUN_ECS_HOST }}
           ALIYUN_ECS_USERNAME: ${{ secrets.ALIYUN_ECS_USERNAME }}
           ALIYUN_ECS_PASSWORD: ${{ secrets.ALIYUN_ECS_PASSWORD }}
+          ALIYUN_KEY: ${{ secrets.ALIYUN_TOKEN }}
         run: |
-          scp -o StrictHostKeyChecking=no -r * $ALIYUN_ECS_USERNAME@$ALIYUN_ECS_HOST:/path/to/deploy
-          python main.py
-          # 其他部署命令，例如：ssh 执行安装、启动服务等
+          sshpass -e ssh -o StrictHostKeyChecking=no $ALIYUN_ECS_USERNAME@$ALIYUN_ECS_HOST "
+            cd /root/telegram_bot_docker &&
+            git pull origin main &&
+            nohup python main.py
