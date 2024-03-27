@@ -33,3 +33,4 @@ jobs:
             cd /root/telegram_bot_docker &&
             git pull origin main &&
             nohup python main.py
+          "
