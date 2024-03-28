@@ -43,7 +43,7 @@ jobs:
 
           # 通过SSH连接到服务器并执行部署命令
           ssh -o StrictHostKeyChecking=no $ALIYUN_ECS_USERNAME@$ALIYUN_ECS_HOST "
-            cd /root/telegram_bot_docker &&
+            cd /path/to/telegram_bot &&
             git pull origin main &&
             nohup python main.py &
           "
