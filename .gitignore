@@ -1,3 +1,6 @@
 ./idea
-_pycache_
+__pycache__
+*.pyc
+*.pyo
 nohup.out
+config_base.ini

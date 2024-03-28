@@ -3,7 +3,6 @@ import logging
 from pymongo import MongoClient
 import configparser
 import json
-import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler,MessageHandler,filters
 
@@ -19,14 +18,14 @@ class TelegramBot:
     def __init__(self,config_file = "config.ini"):
         config = configparser.ConfigParser()
         config.read(config_file)
-        host = os.getenv("MONGODB_HOST")
-        uri = "mongodb://%s:%s@%s" % (os.getenv("MONGODB_USERNAME"), os.getenv("MONGODB_PASSWORD"), host)
+        host = config['MONGODB']['HOST']
+        uri = "mongodb://%s:%s@%s" % (config['MONGODB']['USERNAME'], config['MONGODB']['PASSWORD'], host)
         print(uri)
         self.client = MongoClient(uri)
         self.db = self.client["telegram"]["chatmsg"]
         # self.redis1 = redis.Redis(host=config['REDIS']['HOST'], port=config['REDIS']['PORT'], db=0, password=config['REDIS']['PASSWORD'])
         self.chatgpt = HKBU_ChatGPT(config)
-        self.application = ApplicationBuilder().token(os.getenv("TELEGRAM_TOKEN")).build()
+        self.application = ApplicationBuilder().token(config["TELEGRAM"]["ACCESS_TOKEN"]).build()
 
     # 下方的async开头的函数是Telegram Bot API规定的函数格式，用于处理用户发送的消息，可以根据实际需求进行新增、改写
     # update: 用户发送的消息 context: 上下文
